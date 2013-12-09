@@ -105,21 +105,22 @@ public class CrawlerUrl {
 	return(linkList);
     }
 
-    public void setRawContent(String htmlText) {
-	String baseURL  = getURL() . toExternalForm();
-	this . htmlText = htmlText;
-	htmlJsoupDoc    = Jsoup . parse(htmlText,baseURL);
-	title           = htmlJsoupDoc . title();
-	niceText        = htmlJsoupDoc . body() . text();
-	linkList        = new ArrayList<String>();
-	Elements hrefJsoupLinks = htmlJsoupDoc . select("a[href]");
-        for (Element link : hrefJsoupLinks) {
-	    String thisLink = link.attr("abs:href");
-	    if(thisLink . startsWith("http://")) {
-		System.out.println("JSOUP Found: " + thisLink);
-		linkList . add(thisLink);
-	    }
-	}		
-    }
+	public void setRawContent(String htmlText) {
+		String baseURL  = getURL() . toExternalForm();
+		this . htmlText = htmlText;
+		htmlJsoupDoc    = Jsoup . parse(htmlText,baseURL);
+		title           = htmlJsoupDoc . title();
+		niceText        = htmlJsoupDoc . body() . text();
+		linkList        = new ArrayList<String>();
+		Elements hrefJsoupLinks = htmlJsoupDoc . select("a[href]");
+		
+		for (Element link : hrefJsoupLinks) {
+			String thisLink = link.attr("abs:href");
+			if(thisLink . startsWith("http://")) {
+				System.out.println("JSOUP Found: " + thisLink);
+				linkList . add(thisLink);
+			}
+		}
+	}
 
 }

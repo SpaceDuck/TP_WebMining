@@ -31,7 +31,6 @@ public class SimpleCrawler {
 	System.out.println("Crawl high ! C'est bon, on a fini, au revoir.");
     }
     
-j
     private final        String outputPath;
     private final        String NL = System.getProperty("line.separator");
 
@@ -50,54 +49,57 @@ j
     private BufferedWriter crawlStatistics                  = null;
     private int numberItemsSaved                            = 0;
 
-    public SimpleCrawler(Queue<CrawlerUrl> urlQueue, int maxNumberUrls,
-			 int maxDepth, long delayBetweenUrls, String outP)
-            throws Exception {
-	System.out.println("SimpleCrawler::SimpleCrawler()");
-	this.outputPath       = outP;
-        this.urlQueue         = urlQueue;
-        this.maxNumberUrls    = maxNumberUrls;
-        this.delayBetweenUrls = delayBetweenUrls;
-        this.maxDepth         = maxDepth;
-        this.visitedUrls      = new HashMap<String, CrawlerUrl>();
-        this.sitePermissions  = new HashMap<String, Collection<String>>();
-        crawlOutput           = new BufferedWriter(// pour ecrire dans fichier
-	    new FileWriter(outputPath + "/crawl.txt"));  // on y mettra 
-       // les URLs et les docIds, un par un 
-        crawlStatistics       = new BufferedWriter(// pour ecrire dans fichier
-	    new FileWriter(outputPath + "/crawlStatistics.txt"));//on y mettra
-       // le nombre de liens visites, etc. -- c'est moins important
-    }
+	public SimpleCrawler(Queue<CrawlerUrl> urlQueue, int maxNumberUrls,
+			int maxDepth, long delayBetweenUrls, String outP) throws Exception {
+		System.out.println("SimpleCrawler::SimpleCrawler()");
+		this.outputPath       = outP;
+		this.urlQueue         = urlQueue;
+		this.maxNumberUrls    = maxNumberUrls;
+		this.delayBetweenUrls = delayBetweenUrls;
+		this.maxDepth         = maxDepth;
+		this.visitedUrls      = new HashMap<String, CrawlerUrl>();
+		this.sitePermissions  = new HashMap<String, Collection<String>>();
+		crawlOutput           = new BufferedWriter(// pour ecrire dans fichier
+		new FileWriter(outputPath + "/crawl.txt"));  // on y mettra 
+		// les URLs et les docIds, un par un 
+		crawlStatistics       = new BufferedWriter(// pour ecrire dans fichier
+		new FileWriter(outputPath + "/crawlStatistics.txt"));//on y mettra
+		// le nombre de liens visites, etc. -- c'est moins important
+	}
 
     public void crawl() throws Exception { // methode principale 
-        while (continueCrawling()) { // tant qu'on a des URLs a parcourir
-            // et qu'on remplit les conditions (profondeur, n max, etc.) 
-            CrawlerUrl url = getNextUrl(); // au suivant 
-            if (url != null) {
-                printCrawlInfo(); // affichage+sauvgrd dans crawlStatistics
-		getContent(url);  // recuperation du contenu depuis le web 
-		saveContent(url); // sauvgrd texte dans download_<docId>.txt
-		                  // du titre dans title_<docId>.txt, etc. 
-		addUrlsToUrlQueue(url); // liens sortants dans la queue
-		saveLinks(url);   //liens sortants -> outlinkurls_<docId>.txt
-		numberItemsSaved++; // numberItemsSaved donne le docId
-                Thread.sleep(this.delayBetweenUrls); // pour ne pas assommer 
-		                                     // les serveurs 
-            }
-        }
-        closeOutputStream();   // flush() et close() pour crawl.txt et stats 
-	generateOutlinksIds(); // lecture de crawl.txt avec construction de 
-                               // la table de hachage et puis pour chaque 
-                               // outlinkurls_<docId>.txt, ecriture de 
-	                       // outlinks_<docId>.txt qui contient les 
-	                       // docIds atteignables 
+		while (continueCrawling()) { // tant qu'on a des URLs a parcourir
+			// et qu'on remplit les conditions (profondeur, n max, etc.) 
+			CrawlerUrl url = getNextUrl(); // au suivant 
+			if (url != null) {
+				printCrawlInfo(); // affichage+sauvgrd dans crawlStatistics
+				getContent(url);  // recuperation du contenu depuis le web 
+				saveContent(url); // sauvgrd texte dans download_<docId>.txt
+				// du titre dans title_<docId>.txt, etc. 
+				addUrlsToUrlQueue(url); // liens sortants dans la queue
+				saveLinks(url);   //liens sortants -> outlinkurls_<docId>.txt
+				numberItemsSaved++; // numberItemsSaved donne le docId
+				Thread.sleep(this.delayBetweenUrls); // pour ne pas assommer 
+				// les serveurs 
+			}
+		}
+		closeOutputStream();   // flush() et close() pour crawl.txt et stats 
+		generateOutlinksIds(); // lecture de crawl.txt avec construction de 
+		// la table de hachage et puis pour chaque 
+		// outlinkurls_<docId>.txt, ecriture de 
+		// outlinks_<docId>.txt qui contient les 
+		// docIds atteignables 
     }
     
     private boolean continueCrawling() { // savoir si on peut continuer
-	boolean qContinue = false;
-	// TRAVAIL A FAIRE
-	return(qContinue);
+		boolean qContinue = false;
+		
+		if (!(this.urlQueue.isEmpty()) && this.visitedUrls.size() <= this.maxNumberUrls )
+			qContinue =  true;
+		
+		return(qContinue);
     }
+    
 
     private CrawlerUrl getNextUrl() {  // obtenir l'URL suivant a explorer 
         CrawlerUrl nextUrl = null;
@@ -218,39 +220,42 @@ j
     }
 
     private String getContent(CrawlerUrl url) { // methode essentielle -- 
-        // recuperation du fichier .html depuis le serveur
-	HttpClient httpclient = new DefaultHttpClient();
-	String text = new String();
-        try {
-            HttpGet httpget = new HttpGet(url.getUrlString()); //construction
-	    //  de l'objet qui fera la connexion
+		// recuperation du fichier .html depuis le serveur
+		HttpClient httpclient = new DefaultHttpClient();
+		String text = new String();
+		try {
+			HttpGet httpget = new HttpGet(url.getUrlString()); //construction
+			//  de l'objet qui fera la connexion
 
-            System.out.println("executing request " + httpget.getURI());
-            // construction de l'objet qui gerera le dialogue avec le serveur 
-            ResponseHandler<String> responseHandler = 
-		new BasicResponseHandler();
-            text = httpclient.execute(httpget, responseHandler); //et on y va
-            System.out.println("----------------------------------------");
-            System.out.println(text);
-            System.out.println("----------------------------------------");
-	}
-	catch(Throwable t) {
-	    System.out.println("OOPS YIKES "+ t . toString());
-	    t . printStackTrace();
-	}
-	finally {
-            // Lorsque on n'a plus besoin de l'objet de type HttpClient
-            // on ferme la connexion pour eliberer rapidement les resources
-            // systeme qu'on avait monopolisees
-            httpclient.getConnectionManager().shutdown();
-        }
-	// appeler la methode de SimpleCrawler qui marque l'URL comme visite
-	// et qui l'insere dans la liste des URLs visites
+			System.out.println("executing request " + httpget.getURI());
+			// construction de l'objet qui gerera le dialogue avec le serveur 
+			ResponseHandler<String> responseHandler = 
+			new BasicResponseHandler();
+			text = httpclient.execute(httpget, responseHandler); //et on y va
+			System.out.println("----------------------------------------");
+			System.out.println(text);
+			System.out.println("----------------------------------------");
+		}
+		catch(Throwable t) {
+			System.out.println("OOPS YIKES "+ t . toString());
+			t . printStackTrace();
+		}
+		finally {
+			// Lorsque on n'a plus besoin de l'objet de type HttpClient
+			// on ferme la connexion pour liberer rapidement les resources
+			// systeme qu'on avait monopolisees
+			httpclient.getConnectionManager().shutdown();
+		}
+		// appeler la methode de SimpleCrawler qui marque l'URL comme visite
+		// et qui l'insere dans la liste des URLs visites
+		this.markUrlAsVisited(url);
 
-	// appeler la methode de CrawlerUrl qui recoit le texte HTML brut
-	//  (et le donne au parseur jsoup, pour en extraire le texte, le titre,
-	//   les liens, etc,); l'objet CrawlerUrl a utiliser est 'url'
-        return text;
+		// appeler la methode de CrawlerUrl qui recoit le texte HTML brut
+		//  (et le donne au parseur jsoup, pour en extraire le texte, le titre,
+		//   les liens, etc,); l'objet CrawlerUrl a utiliser est 'url'
+		url.setRawContent(text);
+		
+		return text;
     }
     
     private void markUrlAsVisited(CrawlerUrl url) {
@@ -258,52 +263,80 @@ j
         url.setIsVisited();
     }
 
-    private void saveContent(CrawlerUrl url)  throws Exception {
-	String fileId = String.valueOf(numberItemsSaved);
-	BufferedWriter rankOutput     =
-	    new BufferedWriter(
-		new FileWriter(outputPath + "/rankscore_"+ fileId +".txt"));
-	rankOutput     . write("0.0");
-        rankOutput     . flush();
-        rankOutput     . close();		
+	private void saveContent(CrawlerUrl url)  throws Exception {
+		String fileId = String.valueOf(numberItemsSaved);
+		BufferedWriter rankOutput = new BufferedWriter(outputPathnew FileWriter(outputPath + "/rankscore_"+ fileId +".txt"));
+		rankOutput     . write("0.0");
+		rankOutput     . flush();
+		rankOutput     . close();		
 
-	String docContent;
-	String docTitle;  
+		String docContent;
+		String docTitle;  
 
-	// TRAVAIL A FAIRE
+		// TRAVAIL A FAIRE
 
-	// recuperez dans docContent le texte extrait avec jsoup de la 
-	// variable url, en utilisant une methode de CrawlerUrl 
+		// recuperez dans docContent le texte extrait avec jsoup de la 
+		// variable url, en utilisant une methode de CrawlerUrl
+		this.getContent(url);
+		docContent = url.getNiceText();
 
-	// recuperez dans docTitle le titre extrait avec jsoup de la 
-	// variable url, en utilisant une methode de CrawlerUrl 
+		// recuperez dans docTitle le titre extrait avec jsoup de la 
+		// variable url, en utilisant une methode de CrawlerUrl
+		
+		docTitle = url.getTitle();
 
-	// tout comme pour 'rankscore', creez le fichier de nom
-        //      outputPath + "/download_"+ fileId +".txt"
-        // sauvegarder dedans docContent
-        // faire flush() et close() 
+		this.crawlOutput.append( url.getUrlString()+ " " + fileId).append(NL);
 
-	// sauvegardez le titre dans son fichier, similairement
 
-	// sauvegardez l'url.getUrlString() dans son fichier, similairement
-    }
+		// tout comme pour 'rankscore', creez le fichier de nom
+		//      outputPath + "/download_"+ fileId +".txt"
+		// sauvegarder dedans docContent
+		// faire flush() et close()
+		
+		rankOutput = new BufferedWriter(outputPathnew FileWriter(outputPath + "/download_"+ fileId +".txt"));
+		rankOutput     . write(docContent);
+		rankOutput     . flush();
+		rankOutput     . close();		
+
+		// sauvegardez le titre dans son fichier, similairement
+		
+		rankOutput = new BufferedWriter(outputPathnew FileWriter(outputPath + "/title_"+ fileId +".txt"));
+		rankOutput     . write(docTitle);
+		rankOutput     . flush();
+		rankOutput     . close();
+
+		// sauvegardez l'url.getUrlString() dans son fichier, similairement
+		rankOutput = new BufferedWriter(outputPathnew FileWriter(outputPath + "/url_"+ fileId +".txt"));
+		rankOutput     . write(url.getUrlString());
+		rankOutput     . flush();
+		rankOutput     . close();
+	}
         
     private void saveLinks(CrawlerUrl url) throws Exception {
-	Collection<String> urlStrings = url . getLinks();
-	// TRAVAIL A FAIRE 
-	
-	// mettez l'indice du document courant (variable numberItemsSaved)
-        // comme String dans fileId 
+		Collection<String> urlStrings = url . getLinks();
+		// TRAVAIL A FAIRE 
 
-	// creez le fichier nomme
-	//
-	//    outputPath + "/outlinkurls_"+ fileId +".txt"
-	//
+		// mettez l'indice du document courant (variable numberItemsSaved)
+		// comme String dans fileId
+		String fileId = numberItemsSaved;
 
-        // sauvegardez dedans iterativement chaque URL de la collection
-        // urlStrings, suivie de NL
+		// creez le fichier nomme
+		//
+		//    outputPath + "/outlinkurls_"+ fileId +".txt"
+		//
+		BufferedWriter rankOutput = new BufferedWriter(outputPathnew FileWriter(outputPath + "/outlinkurls_"+ fileId +".txt));
+		rankOutput     . write(url.getUrlString());
+		rankOutput     . flush();
+		rankOutput     . close();
 
-	// flusher et fermer l'ecriture
+		// sauvegardez dedans iterativement chaque URL de la collection
+		// urlStrings, suivie de NL
+		for (String urlCurrent : urlString) {
+			rankOutput     . write(urlCurrent.getUrlString() + '\n');
+		}
+		// flusher et fermer l'ecriture
+		rankOutput     . flush();
+		rankOutput     . close();
     }
     
     private void addUrlsToUrlQueue(CrawlerUrl url) {
